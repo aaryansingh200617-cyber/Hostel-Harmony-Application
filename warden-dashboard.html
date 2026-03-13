@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Warden Dashboard — HostelCare</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="dashboard-layout">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <div class="logo" style="background:#10b981">H</div>
+      <div><span>HostelCare</span><small>Warden Portal</small></div>
+    </div>
+  </div>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="sb-avatar" style="background:linear-gradient(135deg,#10b981,#065f46)">W</div>
+    <div class="user-info">
+      <strong id="sb-name">Warden</strong>
+      <span id="sb-designation">Administration</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Main</div>
+      <button class="nav-item active" data-section="dashboard"><span class="nav-icon">🏠</span> Dashboard</button>
+      <button class="nav-item" data-section="all-complaints"><span class="nav-icon">📋</span> All Complaints <span class="nav-badge" id="active-badge" style="display:none">0</span></button>
+      <button class="nav-item" data-section="ratings"><span class="nav-icon">⭐</span> Student Ratings</button>
+      <button class="nav-item" data-section="analytics"><span class="nav-icon">📊</span> Analytics</button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Account</div>
+      <button class="nav-item" data-section="profile"><span class="nav-icon">👤</span> Profile</button>
+      <button class="nav-item" data-dark-toggle><span class="nav-icon"><span class="theme-icon">🌙</span></span> Dark Mode</button>
+      <button class="nav-item" data-logout><span class="nav-icon">🚪</span> Logout</button>
+    </div>
+  </nav>
+</aside>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<main class="main-content">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+      <div class="topbar-title" id="page-title">Warden Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-icon" data-dark-toggle><span class="theme-icon">🌙</span></button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- ── DASHBOARD ─────────────────────────────────────── -->
+    <div id="section-dashboard">
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+        <div class="stat-card"><div class="stat-icon" style="background:#dbeafe">📋</div><div class="stat-info"><strong id="st-total">0</strong><span>Total</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">🆕</div><div class="stat-info"><strong id="st-new">0</strong><span>Unassigned</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#ede9fe">⚙️</div><div class="stat-info"><strong id="st-active">0</strong><span>In Progress</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#d1fae5">✅</div><div class="stat-info"><strong id="st-resolved">0</strong><span>Resolved</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fee2e2">🚨</div><div class="stat-info"><strong id="st-high">0</strong><span>High Priority</span></div></div>
+      </div>
+
+      <div id="dash-empty-banner" style="display:none;align-items:center;gap:16px;background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px dashed var(--primary);border-radius:14px;padding:24px 28px;margin-bottom:20px;">
+        <div style="font-size:40px;">📭</div>
+        <div>
+          <div style="font-weight:700;font-size:16px;margin-bottom:4px;">No complaints yet</div>
+          <div style="color:var(--text-muted);font-size:14px;">Complaints submitted by students will appear here instantly.</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">By Status</div></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-dash-status"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">By Category</div></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-dash-cat"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ALL ACTIVE COMPLAINTS (shown until resolved) -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📋 Active Complaints — Needs Action</div>
+            <div class="card-subtitle">All complaints that are not yet resolved. Mark as Resolved to remove from this list.</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" data-section="all-complaints">View All →</button>
+        </div>
+        <div id="active-complaints-list"></div>
+      </div>
+    </div>
+
+    <!-- ── ALL COMPLAINTS ────────────────────────────────── -->
+    <div id="section-all-complaints" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">All Complaints</div><div class="card-subtitle">Full history including resolved complaints</div></div>
+        </div>
+        <div class="filter-bar">
+          <select id="f-status"><option value="">All Status</option><option>Submitted</option><option>Assigned</option><option>In Progress</option><option>Resolved</option></select>
+          <select id="f-category"><option value="">All Categories</option><option>Electrical</option><option>Plumbing</option><option>Internet</option><option>Furniture</option><option>Cleanliness</option><option>Other</option></select>
+          <select id="f-block"><option value="">All Blocks</option><option>A</option><option>B</option><option>C</option><option>D</option></select>
+          <select id="f-priority"><option value="">All Priority</option><option>High</option><option>Medium</option><option>Low</option></select>
+          <div class="search-bar" style="flex:1;min-width:150px;">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="f-search" placeholder="Search..." />
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Category</th><th>Description</th><th>Student</th><th>Location</th><th>Priority</th><th>Status</th><th>Technician</th><th>Rating</th><th>Date</th><th>Action</th></tr>
+            </thead>
+            <tbody id="complaints-tbody"></tbody>
+          </table>
+        </div>
+        <div id="empty-complaints" class="empty-state hidden"><span class="empty-icon">📭</span><h3>No complaints found</h3><p>Adjust filters to see results.</p></div>
+      </div>
+    </div>
+
+    <!-- ── STUDENT RATINGS ───────────────────────────────── -->
+    <div id="section-ratings" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">⭐ Student Ratings & Feedback</div><div class="card-subtitle">Ratings given by students after complaint resolution</div></div>
+        </div>
+        <div id="ratings-empty" class="empty-state hidden"><span class="empty-icon">⭐</span><h3>No ratings yet</h3><p>Ratings will appear here once students review resolved complaints.</p></div>
+        <div id="ratings-list"></div>
+      </div>
+
+      <!-- Rating summary stats -->
+      <div id="ratings-summary" class="hidden">
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-top:20px;">
+          <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">⭐</div><div class="stat-info"><strong id="avg-rating">—</strong><span>Avg Rating</span></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#d1fae5">🏆</div><div class="stat-info"><strong id="total-ratings">0</strong><span>Total Reviews</span></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#dbeafe">😊</div><div class="stat-info"><strong id="satisfied-pct">0%</strong><span>Satisfied (4-5★)</span></div></div>
+        </div>
+        <div class="card" style="margin-top:16px;">
+          <div class="card-header"><div class="card-title">Rating Distribution</div></div>
+          <div id="rating-distribution"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ANALYTICS ─────────────────────────────────────── -->
+    <div id="section-analytics" class="hidden">
+      <div id="analytics-empty-warden" class="empty-state hidden" style="padding:48px"><span class="empty-icon">📊</span><h3>No Data Yet</h3><p>Analytics will appear once students submit complaints.</p></div>
+      <div id="analytics-content-warden">
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+          <div class="stat-card"><div class="stat-icon" style="background:#dbeafe">📊</div><div class="stat-info"><strong id="an-total">0</strong><span>Total</span></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#d1fae5">✅</div><div class="stat-info"><strong id="an-res">0</strong><span>Resolved</span></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">⏳</div><div class="stat-info"><strong id="an-pend">0</strong><span>Pending</span></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#ede9fe">📈</div><div class="stat-info"><strong id="an-rate">0%</strong><span>Resolution Rate</span></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#fee2e2">🚨</div><div class="stat-info"><strong id="an-high">0</strong><span>High Priority</span></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-header"><div class="card-title">By Status</div></div><div class="chart-wrap" style="height:220px"><canvas id="chart-an-status"></canvas></div></div>
+          <div class="card"><div class="card-header"><div class="card-title">By Category</div></div><div class="chart-wrap" style="height:220px"><canvas id="chart-an-cat"></canvas></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-header"><div class="card-title">By Block</div></div><div class="chart-wrap" style="height:200px"><canvas id="chart-an-block"></canvas></div></div>
+          <div class="card"><div class="card-header"><div class="card-title">By Priority</div></div><div class="chart-wrap" style="height:200px"><canvas id="chart-an-priority"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Category-wise Resolution Rate</div></div>
+          <div id="warden-cat-table"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROFILE ────────────────────────────────────────── -->
+    <div id="section-profile" class="hidden">
+      <div class="profile-header">
+        <div class="profile-avatar" id="profile-avatar" style="background:linear-gradient(135deg,#10b981,#065f46)">W</div>
+        <div>
+          <div class="profile-name" id="profile-name">—</div>
+          <div class="profile-role">🏛️ Hostel Warden</div>
+          <div class="profile-detail">
+            <span>📧 <span id="profile-email">—</span></span>
+            <span>🏷️ <span id="profile-designation">—</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">📊 Hostel Overview</div>
+        <div id="warden-overview"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- ── MANAGE COMPLAINT MODAL ──────────────────────────── -->
+<div class="modal-overlay" id="manage-modal">
+  <div class="modal" style="max-width:580px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-header">
+      <div class="modal-title" id="manage-modal-title">⚙️ Manage Complaint</div>
+      <button class="modal-close">✕</button>
+    </div>
+    <input type="hidden" id="modal-complaint-id" />
+
+    <!-- Complaint info -->
+    <div id="modal-complaint-info" style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px;font-size:14px;"></div>
+
+    <!-- RESOLVED STATE: show frozen info + student rating -->
+    <div id="resolved-section" style="display:none;">
+      <div style="background:var(--success-light);border:1.5px solid var(--success);border-radius:10px;padding:16px;margin-bottom:16px;">
+        <div style="font-weight:700;color:var(--success);margin-bottom:10px;font-size:14px;">✅ Complaint Resolved — Technician Details (Frozen)</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#10b981,#065f46);display:grid;place-items:center;font-size:18px;flex-shrink:0;">🔧</div>
+          <div>
+            <div style="font-weight:700;font-size:14px;" id="resolved-tech-name">—</div>
+            <div style="font-size:12px;color:var(--text-muted);" id="resolved-tech-specialty">—</div>
+            <div style="font-size:13px;margin-top:2px;">📞 <strong id="resolved-tech-phone" style="color:var(--primary)">—</strong></div>
+          </div>
+        </div>
+      </div>
+      <!-- Student rating display -->
+      <div id="resolved-rating-box" style="display:none;background:linear-gradient(135deg,#fefce8,#fef3c7);border:1.5px solid #f59e0b;border-radius:10px;padding:16px;margin-bottom:16px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;">⭐ Student Rating</div>
+        <div style="font-size:28px;letter-spacing:2px;" id="resolved-stars">—</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:4px;" id="resolved-feedback-text">—</div>
+        <div style="font-size:11px;color:var(--text-light);margin-top:4px;" id="resolved-rated-by">—</div>
+      </div>
+      <div id="resolved-no-rating" style="background:var(--bg);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-muted);margin-bottom:16px;display:none;">
+        ⏳ Student has not rated this complaint yet.
+      </div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-muted);margin-bottom:4px;">
+        This complaint is resolved. No further changes can be made.
+      </div>
+    </div>
+
+    <!-- ACTIVE STATE: technician assignment + status change -->
+    <div id="active-section" style="display:none;">
+      <!-- AI Suggestion -->
+      <div style="background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px solid rgba(37,99,235,0.15);border-radius:10px;padding:16px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <div style="font-weight:700;font-size:14px;">🤖 AI Technician Suggestion</div>
+            <div style="font-size:12px;color:var(--text-muted);">Matched to complaint category</div>
+          </div>
+          <button class="btn btn-blue btn-sm" onclick="suggestTech()">✨ Suggest</button>
+        </div>
+        <div id="tech-suggestion-box" style="display:none;">
+          <div style="display:flex;align-items:center;gap:12px;background:var(--bg-card);border-radius:8px;padding:12px;">
+            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--purple));display:grid;place-items:center;font-size:18px;flex-shrink:0;">🔧</div>
+            <div style="flex:1;">
+              <div style="font-weight:700;" id="sug-name">—</div>
+              <div style="font-size:12px;color:var(--text-muted);" id="sug-specialty">—</div>
+              <div style="font-size:13px;margin-top:3px;">📞 <strong id="sug-phone" style="color:var(--primary)">—</strong></div>
+              <div style="font-size:11px;color:var(--success);margin-top:2px;" id="sug-notif"></div>
+            </div>
+            <button class="btn btn-green btn-sm" onclick="applyTechSuggestion()">✅ Assign</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:6px;width:100%;text-align:center" onclick="suggestTech()">🔄 Different Technician</button>
+        </div>
+      </div>
+
+      <!-- Manual assign -->
+      <div style="margin-bottom:16px;">
+        <div style="font-weight:600;font-size:13px;margin-bottom:8px;color:var(--text-muted);">Or assign manually:</div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label style="font-size:13px;">Technician Name</label>
+          <input type="text" id="manual-tech-name" placeholder="Enter technician name" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label style="font-size:13px;">Phone Number</label>
+            <input type="text" id="manual-tech-phone" placeholder="10-digit phone" />
+          </div>
+          <div class="form-group">
+            <label style="font-size:13px;">Specialty</label>
+            <input type="text" id="manual-tech-specialty" placeholder="e.g. Electrician" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>Update Status</label>
+        <select id="modal-status">
+          <option value="Submitted">📥 Submitted</option>
+          <option value="Assigned">📌 Assigned</option>
+          <option value="In Progress">⚙️ In Progress</option>
+          <option value="Resolved">✅ Resolved</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-blue" id="save-manage-btn" style="flex:1;">💾 Save Changes</button>
+        <button class="btn btn-ghost modal-close">Cancel</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── CHATBOT ─────────────────────────────────────────── -->
+<button class="chatbot-toggle" id="chatbot-toggle">💬</button>
+<div class="chatbot-window" id="chatbot-window">
+  <div class="chat-header">
+    <div class="chat-header-info"><div class="chat-avatar">🤖</div><div><div class="chat-name">HostelBot</div><div class="chat-status">● Warden Assistant</div></div></div>
+    <button class="chat-close-btn" id="chat-close">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-quick-replies">
+    <button class="quick-reply">High priority</button>
+    <button class="quick-reply">Unassigned complaints</button>
+  </div>
+  <div class="chat-input-area">
+    <input type="text" class="chat-input" id="chat-input" placeholder="Ask anything..." />
+    <button class="chat-send-btn" id="chat-send">➤</button>
+  </div>
+</div>
+
+<div id="notif-container" class="notif-container"></div>
+
+<style>
+.tech-chip { display:inline-flex;align-items:center;gap:6px;background:var(--success-light);color:var(--success);padding:3px 10px;border-radius:50px;font-size:12px;font-weight:600; }
+.rating-stars { color:#f59e0b;font-size:16px;letter-spacing:1px; }
+.resolved-row { opacity:0.65; }
+.resolved-row:hover { opacity:1; }
+/* Active complaint card */
+.active-complaint-item {
+  border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;
+  border-left:4px solid var(--primary);transition:box-shadow 0.15s;
+}
+.active-complaint-item.high  { border-left-color:var(--danger); }
+.active-complaint-item.medium{ border-left-color:#f59e0b; }
+.active-complaint-item.low   { border-left-color:#10b981; }
+.active-complaint-item:hover { box-shadow:0 2px 12px rgba(0,0,0,0.08); }
+</style>
+
+<script src="script.js"></script>
+<script>
+let currentUser = null;
+let currentSuggestedTech = null;
+let currentManageId = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  currentUser = Auth.requireAuth('warden');
+  if (!currentUser) return;
+
+  // Load all complaints from MongoDB
+  await AppCache.loadComplaints();
+
+  document.getElementById('sb-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+  document.getElementById('sb-name').textContent = currentUser.name;
+  document.getElementById('sb-designation').textContent = currentUser.designation || 'Warden';
+
+  initNav();
+  renderDashboard();
+  setupModals();
+  setupFilters();
+  document.getElementById('save-manage-btn').addEventListener('click', saveManage);
+
+  // Poll every 15 seconds for new complaints from other students
+  setInterval(async () => {
+    await AppCache.loadComplaints();
+    const sec = document.querySelector('[id^="section-"]:not(.hidden)');
+    if (sec && sec.id === 'section-dashboard')       renderDashboard();
+    if (sec && sec.id === 'section-all-complaints')  renderAllComplaints();
+    if (sec && sec.id === 'section-ratings')         renderRatings();
+  }, 15000);
+});
+
+function initNav() {
+  document.querySelectorAll('[data-section]').forEach(btn => {
+    btn.addEventListener('click', () => switchSection(btn.dataset.section));
+  });
+}
+
+function switchSection(name) {
+  document.querySelectorAll('[id^="section-"]').forEach(s => s.classList.add('hidden'));
+  document.getElementById('section-' + name)?.classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll(`[data-section="${name}"]`).forEach(b => b.classList.add('active'));
+  const titles = { dashboard:'Warden Dashboard', 'all-complaints':'All Complaints', ratings:'Student Ratings', analytics:'Analytics', profile:'Profile' };
+  document.getElementById('page-title').textContent = titles[name] || name;
+  if (name === 'all-complaints') renderAllComplaints();
+  if (name === 'ratings')        renderRatings();
+  if (name === 'analytics')      renderAnalytics();
+  if (name === 'profile')        renderProfile();
+  if (name === 'dashboard')      renderDashboard();
+}
+
+// ── DASHBOARD ────────────────────────────────────────────
+function renderDashboard() {
+  const all = ComplaintManager.getAll();
+  const active = all.filter(c => c.status !== 'Resolved');
+  const unassigned = active.filter(c => !c.assignedTechName).length;
+  const inProg = all.filter(c => c.status === 'In Progress' || c.status === 'Assigned').length;
+  const resolved = all.filter(c => c.status === 'Resolved').length;
+  const high = active.filter(c => c.priority === 'High').length;
+
+  document.getElementById('st-total').textContent = all.length;
+  document.getElementById('st-new').textContent = unassigned;
+  document.getElementById('st-active').textContent = inProg;
+  document.getElementById('st-resolved').textContent = resolved;
+  document.getElementById('st-high').textContent = high;
+
+  // Badge on nav
+  if (active.length > 0) {
+    const b = document.getElementById('active-badge');
+    b.textContent = active.length; b.style.display = 'inline';
+  }
+
+  // Empty banner
+  document.getElementById('dash-empty-banner').style.display = all.length === 0 ? 'flex' : 'none';
+
+  // Charts
+  if (all.length > 0) {
+    makeChart('chart-dash-status','doughnut',
+      ['Submitted','Assigned','In Progress','Resolved'],
+      ['Submitted','Assigned','In Progress','Resolved'].map(s => all.filter(c=>c.status===s).length),
+      ['#3b82f6','#f59e0b','#8b5cf6','#10b981']);
+
+    const cats = ['Electrical','Plumbing','Internet','Furniture','Cleanliness','Other'];
+    const icons = {Electrical:'⚡',Plumbing:'🚿',Internet:'📶',Furniture:'🪑',Cleanliness:'🧹',Other:'📦'};
+    makeChart('chart-dash-cat','bar',
+      cats.map(c => icons[c]+' '+c),
+      cats.map(c => all.filter(x=>x.category===c).length),
+      ['#f59e0b','#3b82f6','#8b5cf6','#ec4899','#10b981','#94a3b8']);
+  }
+
+  // Active complaints list — ALL non-resolved, sorted by priority then date
+  const sorted = [...active].sort((a,b) => {
+    const p = {High:0, Medium:1, Low:2};
+    return (p[a.priority]||2) - (p[b.priority]||2) || new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
+  const listEl = document.getElementById('active-complaints-list');
+  if (sorted.length === 0) {
+    listEl.innerHTML = `<div class="empty-state"><span class="empty-icon">🎉</span><h3>All complaints resolved!</h3><p>There are no pending complaints at the moment.</p></div>`;
+  } else {
+    listEl.innerHTML = sorted.map(c => `
+      <div class="active-complaint-item ${(c.priority||'low').toLowerCase()}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+              ${UI.categoryBadge(c.category)} ${UI.priorityBadge(c.priority)} ${UI.statusBadge(c.status)}
+            </div>
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">${c.description.substring(0,90)}${c.description.length>90?'...':''}</div>
+            <div style="font-size:12px;color:var(--text-light);display:flex;gap:12px;flex-wrap:wrap;">
+              <span>👤 ${c.userName||'—'}</span>
+              <span>🏠 Block ${c.block} · Room ${c.room}</span>
+              <span>📅 ${UI.timeAgo(c.createdAt)}</span>
+              ${c.assignedTechName ? `<span style="color:var(--success);">🔧 ${c.assignedTechName}</span>` : `<span style="color:var(--danger);">⚠ Unassigned</span>`}
+            </div>
+          </div>
+          <button class="btn btn-blue btn-sm" onclick="openManage('${c.id}')" style="flex-shrink:0;">⚙️ Manage</button>
+        </div>
+      </div>`).join('');
+  }
+}
+
+// ── ALL COMPLAINTS TABLE ──────────────────────────────────
+function renderAllComplaints() {
+  const fStatus   = document.getElementById('f-status').value;
+  const fCat      = document.getElementById('f-category').value;
+  const fBlock    = document.getElementById('f-block').value;
+  const fPriority = document.getElementById('f-priority').value;
+  const search    = document.getElementById('f-search').value.toLowerCase();
+
+  let complaints = ComplaintManager.getAll();
+  if (fStatus)   complaints = complaints.filter(c => c.status === fStatus);
+  if (fCat)      complaints = complaints.filter(c => c.category === fCat);
+  if (fBlock)    complaints = complaints.filter(c => c.block === fBlock);
+  if (fPriority) complaints = complaints.filter(c => c.priority === fPriority);
+  if (search)    complaints = complaints.filter(c =>
+    c.description.toLowerCase().includes(search) || (c.userName||'').toLowerCase().includes(search));
+
+  complaints.sort((a,b) => {
+    const p = {High:0,Medium:1,Low:2};
+    return (p[a.priority]||2)-(p[b.priority]||2) || new Date(b.createdAt)-new Date(a.createdAt);
+  });
+
+  const tbody   = document.getElementById('complaints-tbody');
+  const emptyEl = document.getElementById('empty-complaints');
+
+  if (complaints.length === 0) {
+    tbody.innerHTML = ''; emptyEl.classList.remove('hidden'); return;
+  }
+  emptyEl.classList.add('hidden');
+
+  tbody.innerHTML = complaints.map((c, i) => {
+    const isResolved = c.status === 'Resolved';
+    const ratingHtml = c.rating
+      ? `<span class="rating-stars">${'★'.repeat(c.rating)}${'☆'.repeat(5-c.rating)}</span> <span style="font-size:11px;color:var(--text-muted)">${c.rating}/5</span>`
+      : `<span style="color:var(--text-light);font-size:12px;">${isResolved ? 'Not rated' : '—'}</span>`;
+    return `
+    <tr class="${isResolved ? 'resolved-row' : ''}">
+      <td style="color:var(--text-light);font-size:12px">${i+1}</td>
+      <td>${UI.categoryBadge(c.category)}</td>
+      <td style="max-width:160px;"><span style="font-size:13px;color:var(--text-muted)">${c.description.substring(0,50)}${c.description.length>50?'...':''}</span></td>
+      <td style="font-size:13px;">${c.userName||'—'}</td>
+      <td style="font-size:13px;">B-${c.block} · ${c.room}</td>
+      <td>${UI.priorityBadge(c.priority)}</td>
+      <td>${UI.statusBadge(c.status)}</td>
+      <td style="font-size:12px;">${c.assignedTechName
+        ? `<span class="tech-chip">🔧 ${c.assignedTechName}</span>`
+        : `<span style="color:var(--text-light)">Unassigned</span>`}</td>
+      <td>${ratingHtml}</td>
+      <td style="font-size:12px;">${UI.formatDate(c.createdAt)}</td>
+      <td>${isResolved
+        ? `<span style="font-size:12px;color:var(--success);">✅ Done</span>`
+        : `<button class="btn btn-blue btn-sm" onclick="openManage('${c.id}')">⚙️ Manage</button>`}</td>
+    </tr>`;
+  }).join('');
+}
+
+function setupFilters() {
+  ['f-status','f-category','f-block','f-priority','f-search'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', renderAllComplaints);
+  });
+}
+
+// ── RATINGS PAGE ─────────────────────────────────────────
+function renderRatings() {
+  const allComplaints = ComplaintManager.getAll();
+  const rated = allComplaints.filter(c => c.rating);
+
+  const emptyEl   = document.getElementById('ratings-empty');
+  const listEl    = document.getElementById('ratings-list');
+  const summaryEl = document.getElementById('ratings-summary');
+
+  if (rated.length === 0) {
+    emptyEl.classList.remove('hidden');
+    listEl.innerHTML = '';
+    summaryEl.classList.add('hidden');
+    return;
+  }
+
+  emptyEl.classList.add('hidden');
+  summaryEl.classList.remove('hidden');
+
+  // Summary stats
+  const avgRating = (rated.reduce((sum, c) => sum + c.rating, 0) / rated.length).toFixed(1);
+  const satisfied = rated.filter(c => c.rating >= 4).length;
+  document.getElementById('avg-rating').textContent     = avgRating + ' ★';
+  document.getElementById('total-ratings').textContent  = rated.length;
+  document.getElementById('satisfied-pct').textContent  = Math.round(satisfied / rated.length * 100) + '%';
+
+  // Sort latest first
+  const sorted = [...rated].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+  listEl.innerHTML = sorted.map(c => {
+    const stars = '★'.repeat(c.rating) + '☆'.repeat(5 - c.rating);
+    const starColor = c.rating >= 4 ? '#f59e0b' : c.rating === 3 ? '#94a3b8' : '#ef4444';
+    return `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:10px;border-left:4px solid ${starColor};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          ${UI.categoryBadge(c.category)}
+          <span style="font-size:11px;color:var(--text-muted);">Complaint #${c.id.slice(-4).toUpperCase()}</span>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:22px;letter-spacing:2px;color:${starColor};">${stars}</div>
+          <div style="font-size:12px;color:var(--text-muted);">${c.rating}/5 stars</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;margin-bottom:${c.feedback?'10px':'0'};">
+        <div><span style="color:var(--text-muted);">👤 Student:</span> ${c.userName||'—'}</div>
+        <div><span style="color:var(--text-muted);">🔧 Technician:</span> ${c.assignedTechName||'—'}</div>
+        <div><span style="color:var(--text-muted);">🏠 Location:</span> Block ${c.block} · Room ${c.room}</div>
+        <div><span style="color:var(--text-muted);">📅 Resolved:</span> ${UI.formatDate(c.resolvedAt||c.updatedAt)}</div>
+      </div>
+      ${c.feedback ? `<div style="background:var(--bg);border-radius:8px;padding:10px 12px;font-size:13px;font-style:italic;color:var(--text-muted);">"${c.feedback}"</div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Distribution bars
+  const distEl = document.getElementById('rating-distribution');
+  distEl.innerHTML = [5,4,3,2,1].map(star => {
+    const count = rated.filter(c => c.rating === star).length;
+    const pct   = Math.round(count / rated.length * 100);
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px;">
+      <span style="width:40px;text-align:right;color:#f59e0b;">${'★'.repeat(star)}</span>
+      <div style="flex:1;background:var(--border);border-radius:50px;height:10px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${star>=4?'#f59e0b':star===3?'#94a3b8':'#ef4444'};border-radius:50px;transition:width .5s;"></div>
+      </div>
+      <span style="width:30px;font-weight:700;">${count}</span>
+      <span style="width:35px;color:var(--text-muted);">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ── MANAGE MODAL ─────────────────────────────────────────
+function openManage(id) {
+  const c = ComplaintManager.getById(id);
+  if (!c) return;
+  currentManageId = id;
+  currentSuggestedTech = null;
+
+  // Complaint info header
+  document.getElementById('modal-complaint-info').innerHTML = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+      ${UI.categoryBadge(c.category)} ${UI.priorityBadge(c.priority)} ${UI.statusBadge(c.status)}
+    </div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">${c.description}</div>
+    <div style="font-size:12px;color:var(--text-light);">👤 ${c.userName} · 🏠 Block ${c.block} · Room ${c.room} · 📅 ${UI.formatDate(c.createdAt)}</div>`;
+
+  const isResolved = c.status === 'Resolved';
+
+  // Show correct section
+  document.getElementById('resolved-section').style.display = isResolved ? 'block' : 'none';
+  document.getElementById('active-section').style.display   = isResolved ? 'none'  : 'block';
+
+  if (isResolved) {
+    // Freeze technician info
+    document.getElementById('resolved-tech-name').textContent      = c.assignedTechName      || '—';
+    document.getElementById('resolved-tech-specialty').textContent = c.assignedTechSpecialty  || '—';
+    document.getElementById('resolved-tech-phone').textContent     = c.assignedTechPhone      || '—';
+    document.getElementById('manage-modal-title').textContent      = '✅ Complaint Resolved (Read Only)';
+
+    // Show student rating if exists
+    if (c.rating) {
+      document.getElementById('resolved-rating-box').style.display  = 'block';
+      document.getElementById('resolved-no-rating').style.display   = 'none';
+      document.getElementById('resolved-stars').textContent         = '★'.repeat(c.rating) + '☆'.repeat(5-c.rating);
+      document.getElementById('resolved-stars').style.color         = c.rating >= 4 ? '#f59e0b' : c.rating === 3 ? '#94a3b8' : '#ef4444';
+      document.getElementById('resolved-feedback-text').textContent = c.feedback ? `"${c.feedback}"` : 'No written feedback provided.';
+      document.getElementById('resolved-rated-by').textContent      = `Rated by ${c.userName} · ${UI.formatDate(c.updatedAt)}`;
+    } else {
+      document.getElementById('resolved-rating-box').style.display = 'none';
+      document.getElementById('resolved-no-rating').style.display  = 'block';
+    }
+  } else {
+    document.getElementById('manage-modal-title').textContent  = '⚙️ Manage Complaint';
+    document.getElementById('tech-suggestion-box').style.display = 'none';
+    document.getElementById('modal-status').value              = c.status;
+    document.getElementById('manual-tech-name').value          = c.assignedTechName      || '';
+    document.getElementById('manual-tech-phone').value         = c.assignedTechPhone     || '';
+    document.getElementById('manual-tech-specialty').value     = c.assignedTechSpecialty || '';
+  }
+
+  document.getElementById('manage-modal').classList.add('show');
+}
+
+function suggestTech() {
+  const c = ComplaintManager.getById(currentManageId);
+  if (!c) return;
+  currentSuggestedTech = suggestTechnician(c.category);
+  const notifMsg = `📱 SMS sent to ${currentSuggestedTech.phone.substring(0,5)}XXXXX — "Assigned: ${c.category} at Block ${c.block}, Room ${c.room}."`;
+  document.getElementById('sug-name').textContent      = currentSuggestedTech.name;
+  document.getElementById('sug-specialty').textContent = currentSuggestedTech.specialty;
+  document.getElementById('sug-phone').textContent     = currentSuggestedTech.phone;
+  document.getElementById('sug-notif').textContent     = notifMsg;
+  document.getElementById('tech-suggestion-box').style.display = 'block';
+  Notify.show('Technician Suggested!', `${currentSuggestedTech.name} suggested for ${c.category} issue.`, 'info');
+}
+
+function applyTechSuggestion() {
+  if (!currentSuggestedTech) return;
+  document.getElementById('manual-tech-name').value      = currentSuggestedTech.name;
+  document.getElementById('manual-tech-phone').value     = currentSuggestedTech.phone;
+  document.getElementById('manual-tech-specialty').value = currentSuggestedTech.specialty;
+  if (document.getElementById('modal-status').value === 'Submitted')
+    document.getElementById('modal-status').value = 'Assigned';
+  Notify.show('Applied!', `${currentSuggestedTech.name} added. Click Save to confirm.`, 'success');
+}
+
+async function saveManage() {
+  const id         = currentManageId;
+  const c          = ComplaintManager.getById(id);
+  if (!c || c.status === 'Resolved') return; // block saves on resolved complaints
+
+  const status      = document.getElementById('modal-status').value;
+  const techName    = document.getElementById('manual-tech-name').value.trim();
+  const techPhone   = document.getElementById('manual-tech-phone').value.trim();
+  const techSpecial = document.getElementById('manual-tech-specialty').value.trim();
+
+  if (techName && !techPhone) {
+    Notify.show('Missing Phone', 'Please enter technician phone number.', 'warning'); return;
+  }
+
+  const updates = { status };
+  if (techName) {
+    updates.assignedTechName      = techName;
+    updates.assignedTechPhone     = techPhone;
+    updates.assignedTechSpecialty = techSpecial || 'General Technician';
+    if (status === 'Submitted') updates.status = 'Assigned';
+  }
+
+  const btn = document.getElementById('save-manage-btn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+
+  const res = await ComplaintManager.update(id, updates);
+
+  btn.textContent = 'Save Changes'; btn.disabled = false;
+
+  if (!res.ok) {
+    Notify.show('Error', res.msg || 'Failed to save changes.', 'error'); return;
+  }
+  Notify.show('Updated!', `Status: ${updates.status}${techName ? ' · Assigned: '+techName : ''}`, 'success');
+  document.getElementById('manage-modal').classList.remove('show');
+  renderDashboard();
+  renderAllComplaints();
+}
+
+// ── ANALYTICS ────────────────────────────────────────────
+function renderAnalytics() {
+  const all = ComplaintManager.getAll();
+  if (all.length === 0) {
+    document.getElementById('analytics-empty-warden').classList.remove('hidden');
+    document.getElementById('analytics-content-warden').classList.add('hidden');
+    return;
+  }
+  document.getElementById('analytics-empty-warden').classList.add('hidden');
+  document.getElementById('analytics-content-warden').classList.remove('hidden');
+
+  const resolved = all.filter(c => c.status==='Resolved').length;
+  document.getElementById('an-total').textContent = all.length;
+  document.getElementById('an-res').textContent   = resolved;
+  document.getElementById('an-pend').textContent  = all.length - resolved;
+  document.getElementById('an-rate').textContent  = Math.round(resolved/all.length*100) + '%';
+  document.getElementById('an-high').textContent  = all.filter(c => c.priority==='High').length;
+
+  makeChart('chart-an-status','doughnut',['Submitted','Assigned','In Progress','Resolved'],
+    ['Submitted','Assigned','In Progress','Resolved'].map(s => all.filter(c=>c.status===s).length),
+    ['#3b82f6','#f59e0b','#8b5cf6','#10b981']);
+
+  const cats  = ['Electrical','Plumbing','Internet','Furniture','Cleanliness','Other'];
+  const icons = {Electrical:'⚡',Plumbing:'🚿',Internet:'📶',Furniture:'🪑',Cleanliness:'🧹',Other:'📦'};
+  makeChart('chart-an-cat','bar', cats.map(c=>icons[c]+' '+c), cats.map(c=>all.filter(x=>x.category===c).length),
+    ['#f59e0b','#3b82f6','#8b5cf6','#ec4899','#10b981','#94a3b8']);
+  makeChart('chart-an-block','bar',['A','B','C','D'].map(b=>'Block '+b),['A','B','C','D'].map(b=>all.filter(c=>c.block===b).length),
+    ['#3b82f6','#10b981','#f59e0b','#ef4444']);
+  makeChart('chart-an-priority','doughnut',['High','Medium','Low'],
+    ['High','Medium','Low'].map(p=>all.filter(c=>c.priority===p).length),['#ef4444','#f59e0b','#10b981']);
+
+  document.getElementById('warden-cat-table').innerHTML = cats.map(cat => {
+    const cc = all.filter(c=>c.category===cat);
+    if (!cc.length) return '';
+    const cr  = cc.filter(c=>c.status==='Resolved').length;
+    const pct = Math.round(cr/cc.length*100);
+    return `<div style="display:grid;grid-template-columns:90px 1fr 50px 80px;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;">
+      <span style="font-weight:600">${icons[cat]} ${cat}</span>
+      <div style="background:var(--border);border-radius:50px;height:8px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${pct>=75?'#10b981':pct>=40?'#f59e0b':'#ef4444'};border-radius:50px;"></div>
+      </div>
+      <span style="font-weight:700;text-align:right">${pct}%</span>
+      <span style="color:var(--text-muted)">${cr}/${cc.length}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── PROFILE ──────────────────────────────────────────────
+function renderProfile() {
+  const all = ComplaintManager.getAll();
+  document.getElementById('profile-avatar').textContent      = currentUser.name.charAt(0).toUpperCase();
+  document.getElementById('profile-name').textContent        = currentUser.name;
+  document.getElementById('profile-email').textContent       = currentUser.email;
+  document.getElementById('profile-designation').textContent = currentUser.designation || 'Warden';
+  const resolved = all.filter(c=>c.status==='Resolved').length;
+  document.getElementById('warden-overview').innerHTML = [
+    ['Total Complaints',   all.length,                                                    '#dbeafe'],
+    ['Resolved',           resolved,                                                      '#d1fae5'],
+    ['Pending',            all.length - resolved,                                         '#fef3c7'],
+    ['High Priority Active', all.filter(c=>c.priority==='High'&&c.status!=='Resolved').length, '#fee2e2'],
+    ['Unassigned',         all.filter(c=>!c.assignedTechName&&c.status!=='Resolved').length,   '#ede9fe'],
+  ].map(([l,v,bg]) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:${bg};border-radius:8px;margin-bottom:8px;">
+    <span style="font-weight:500;font-size:14px;">${l}</span>
+    <strong style="font-family:var(--font-display);font-size:1.3rem;">${v}</strong>
+  </div>`).join('');
+}
+
+// ── HELPERS ──────────────────────────────────────────────
+function makeChart(id, type, labels, data, colors) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (ctx._chart) ctx._chart.destroy();
+  ctx._chart = new Chart(ctx, {
+    type,
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth:0, borderRadius: type==='bar'?6:0 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position:'bottom', labels:{ padding:10, font:{size:11} } } },
+      scales: type==='bar' ? { y:{beginAtZero:true, grid:{color:'rgba(0,0,0,0.04)'}}, x:{grid:{display:false}} } : {}
+    }
+  });
+}
+
+function setupModals() {
+  document.querySelectorAll('.modal-close').forEach(btn =>
+    btn.addEventListener('click', () => btn.closest('.modal-overlay').classList.remove('show')));
+  document.querySelectorAll('.modal-overlay').forEach(m =>
+    m.addEventListener('click', e => { if (e.target===m) m.classList.remove('show'); }));
+}
+
+window.openManage         = openManage;
+window.suggestTech        = suggestTech;
+window.applyTechSuggestion = applyTechSuggestion;
+</script>
+</body>
+</html>

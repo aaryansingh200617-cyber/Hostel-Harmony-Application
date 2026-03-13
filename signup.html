@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up — HostelCare</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="auth-page">
+
+<div class="auth-container" style="max-width:520px;">
+  <div class="auth-logo">
+    <div class="logo-icon">H</div>
+    <h2>Create Account</h2>
+    <p>Join HostelCare to manage hostel complaints</p>
+  </div>
+
+  <div id="error-box" class="form-error"></div>
+  <div id="success-box" style="display:none; background:var(--success-light); color:var(--success); padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:12px;"></div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Full Name *</label>
+      <input type="text" id="su-name" placeholder="Your full name" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label>Role *</label>
+      <select id="su-role">
+        <option value="">Select role</option>
+        <option value="student">Student</option>
+        <option value="warden">Warden</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Email Address *</label>
+    <input type="text" id="su-email" placeholder="your@email.com" autocomplete="off" />
+  </div>
+
+  <!-- Student-only fields -->
+  <div id="student-fields" style="display:none;">
+    <div class="form-group">
+      <label>Hostel Type *</label>
+      <div style="display:flex; gap:10px; margin-top:4px;">
+        <label class="hostel-type-btn">
+          <input type="radio" name="hostel_type" value="Boys" id="ht-boys" />
+          <span class="hostel-type-inner">Boys Hostel</span>
+        </label>
+        <label class="hostel-type-btn">
+          <input type="radio" name="hostel_type" value="Girls" id="ht-girls" />
+          <span class="hostel-type-inner">Girls Hostel</span>
+        </label>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Block *</label>
+        <select id="su-block">
+          <option value="A">Block A</option>
+          <option value="B">Block B</option>
+          <option value="C">Block C</option>
+          <option value="D">Block D</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Room Number *</label>
+        <input type="text" id="su-room" placeholder="e.g. 101" autocomplete="off" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Warden-only fields -->
+  <div id="warden-fields" style="display:none;">
+    <div class="form-group">
+      <label>Designation</label>
+      <input type="text" id="su-designation" placeholder="e.g. Chief Warden" autocomplete="off" />
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Password *</label>
+      <input type="password" id="su-password" placeholder="Min. 6 characters" autocomplete="new-password" />
+    </div>
+    <div class="form-group">
+      <label>Confirm Password *</label>
+      <input type="password" id="su-confirm" placeholder="Repeat password" autocomplete="new-password" />
+    </div>
+  </div>
+
+  <button class="btn-full" id="signup-btn">Create Account</button>
+
+  <div class="auth-footer">
+    Already have an account? <a href="login.html">Sign in</a>
+    &nbsp;&middot;&nbsp;
+    <a href="index.html">Home</a>
+  </div>
+
+  <div style="text-align:center; margin-top:16px;">
+    <button data-dark-toggle class="btn-icon"><span class="theme-icon">moon</span></button>
+  </div>
+</div>
+
+<style>
+.hostel-type-btn { flex: 1; cursor: pointer; display: block; }
+.hostel-type-btn input[type="radio"] { display: none; }
+.hostel-type-inner {
+  display: block;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  background: var(--bg);
+  color: var(--text);
+  transition: all 0.2s;
+  user-select: none;
+}
+.hostel-type-btn input[type="radio"]:checked + .hostel-type-inner {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 700;
+}
+.hostel-type-inner:hover { border-color: var(--primary); }
+</style>
+
+<div id="notif-container" class="notif-container"></div>
+
+<script src="script.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+
+    // Show/hide fields based on role selection
+    document.getElementById('su-role').addEventListener('change', function () {
+      var role = this.value;
+      document.getElementById('student-fields').style.display = (role === 'student') ? 'block' : 'none';
+      document.getElementById('warden-fields').style.display  = (role === 'warden')  ? 'block' : 'none';
+    });
+
+    document.getElementById('signup-btn').addEventListener('click', doSignup);
+
+    async function doSignup() {
+      var errBox = document.getElementById('error-box');
+      var btn    = document.getElementById('signup-btn');
+      errBox.textContent = '';
+      errBox.classList.remove('show');
+
+      var name     = document.getElementById('su-name').value.trim();
+      var email    = document.getElementById('su-email').value.trim().toLowerCase();
+      var role     = document.getElementById('su-role').value;
+      var password = document.getElementById('su-password').value;
+      var confirm  = document.getElementById('su-confirm').value;
+
+      // Basic validation
+      if (!name)     { errBox.textContent = 'Please enter your name.';         errBox.classList.add('show'); return; }
+      if (!email)    { errBox.textContent = 'Please enter your email.';        errBox.classList.add('show'); return; }
+      if (!role)     { errBox.textContent = 'Please select a role.';           errBox.classList.add('show'); return; }
+      if (!password) { errBox.textContent = 'Please enter a password.';        errBox.classList.add('show'); return; }
+      if (password.length < 6) { errBox.textContent = 'Password must be at least 6 characters.'; errBox.classList.add('show'); return; }
+      if (password !== confirm) { errBox.textContent = 'Passwords do not match.'; errBox.classList.add('show'); return; }
+
+      // Build request body
+      var userData = { name, email, password, role };
+
+      if (role === 'student') {
+        var hostelType = document.querySelector('input[name="hostel_type"]:checked');
+        var room = document.getElementById('su-room').value.trim();
+        if (!hostelType) { errBox.textContent = 'Please select Boys or Girls hostel.'; errBox.classList.add('show'); return; }
+        if (!room)       { errBox.textContent = 'Please enter your room number.';      errBox.classList.add('show'); return; }
+        userData.hostelType = hostelType.value;
+        userData.block      = document.getElementById('su-block').value;
+        userData.room       = room;
+      }
+
+      if (role === 'warden') {
+        var desig = document.getElementById('su-designation').value.trim();
+        userData.designation = desig || 'Warden';
+      }
+
+      // Call backend API
+      btn.textContent = 'Creating account…';
+      btn.disabled = true;
+
+      const res = await API.post('/auth/register', userData);
+
+      btn.textContent = 'Create Account';
+      btn.disabled = false;
+
+      if (!res.ok) {
+        errBox.textContent = res.msg || 'Registration failed. Please try again.';
+        errBox.classList.add('show');
+        return;
+      }
+
+      // Show success and redirect
+      var successBox = document.getElementById('success-box');
+      successBox.textContent = 'Account created! Redirecting to login...';
+      successBox.style.display = 'block';
+
+      setTimeout(function () {
+        window.location.href = 'login.html';
+      }, 1200);
+    }
+
+  });
+</script>
+</body>
+</html>

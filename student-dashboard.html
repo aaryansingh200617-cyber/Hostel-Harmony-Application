@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Dashboard — HostelCare</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="dashboard-layout">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <div class="logo">H</div>
+      <div><span>HostelCare</span><small>Student Portal</small></div>
+    </div>
+  </div>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="sb-avatar">A</div>
+    <div class="user-info">
+      <strong id="sb-name">Student</strong>
+      <span id="sb-room">Room —</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Main</div>
+      <button class="nav-item active" data-section="dashboard"><span class="nav-icon">🏠</span> Dashboard</button>
+      <button class="nav-item" data-section="submit"><span class="nav-icon">➕</span> Submit Complaint</button>
+      <button class="nav-item" data-section="my-complaints"><span class="nav-icon">📋</span> My Complaints <span class="nav-badge" id="pending-count" style="display:none">0</span></button>
+      <button class="nav-item" data-section="analytics"><span class="nav-icon">📊</span> Analytics</button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Account</div>
+      <button class="nav-item" data-section="profile"><span class="nav-icon">👤</span> Profile</button>
+      <button class="nav-item" data-dark-toggle><span class="nav-icon"><span class="theme-icon">🌙</span></span> Dark Mode</button>
+      <button class="nav-item" data-logout><span class="nav-icon">🚪</span> Logout</button>
+    </div>
+  </nav>
+</aside>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<main class="main-content">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+      <div class="topbar-title" id="page-title">Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-icon" data-dark-toggle><span class="theme-icon">🌙</span></button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- DASHBOARD -->
+    <div id="section-dashboard">
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+        <div class="stat-card"><div class="stat-icon" style="background:#dbeafe">📋</div><div class="stat-info"><strong id="st-total">0</strong><span>Total Complaints</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">⏳</div><div class="stat-info"><strong id="st-active">0</strong><span>Active</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#d1fae5">✅</div><div class="stat-info"><strong id="st-resolved">0</strong><span>Resolved</span></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fee2e2">🚨</div><div class="stat-info"><strong id="st-high">0</strong><span>High Priority</span></div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Recent Complaints</div><div class="card-subtitle">Your latest submissions</div></div>
+            <button class="btn btn-ghost btn-sm" data-section="my-complaints">View All →</button>
+          </div>
+          <div id="recent-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Status Overview</div></div>
+          <div id="no-complaints-chart" class="empty-state hidden" style="padding:24px"><span class="empty-icon" style="font-size:32px">📭</span><p>Submit your first complaint to see analytics.</p></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-status"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBMIT COMPLAINT -->
+    <div id="section-submit" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Submit New Complaint</div><div class="card-subtitle">Select category first, then describe your issue. AI will detect priority automatically.</div></div>
+        </div>
+
+        <!-- STEP 1: Category Selection (prominent, on top) -->
+        <div style="margin-bottom:24px;">
+          <label style="display:block;font-weight:600;font-size:14px;margin-bottom:12px;">① Select Category <span style="color:var(--danger)">*</span></label>
+          <div class="category-grid" id="category-grid">
+            <div class="cat-btn" data-cat="Electrical">
+              <span class="cat-icon">⚡</span>
+              <span class="cat-label">Electrical</span>
+              <span class="cat-sub">Lights, fans, sockets</span>
+            </div>
+            <div class="cat-btn" data-cat="Plumbing">
+              <span class="cat-icon">🚿</span>
+              <span class="cat-label">Plumbing</span>
+              <span class="cat-sub">Taps, pipes, drains</span>
+            </div>
+            <div class="cat-btn" data-cat="Internet">
+              <span class="cat-icon">📶</span>
+              <span class="cat-label">Internet</span>
+              <span class="cat-sub">WiFi, LAN, router</span>
+            </div>
+            <div class="cat-btn" data-cat="Furniture">
+              <span class="cat-icon">🪑</span>
+              <span class="cat-label">Furniture</span>
+              <span class="cat-sub">Beds, doors, windows</span>
+            </div>
+            <div class="cat-btn" data-cat="Cleanliness">
+              <span class="cat-icon">🧹</span>
+              <span class="cat-label">Cleanliness</span>
+              <span class="cat-sub">Hygiene, pests, garbage</span>
+            </div>
+            <div class="cat-btn" data-cat="Other">
+              <span class="cat-icon">📦</span>
+              <span class="cat-label">Other</span>
+              <span class="cat-sub">Anything else</span>
+            </div>
+          </div>
+          <input type="hidden" id="c-category" />
+          <div id="cat-error" style="color:var(--danger);font-size:13px;margin-top:6px;display:none">⚠ Please select a category.</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- STEP 2: Details -->
+        <div style="margin-top:20px;">
+          <label style="display:block;font-weight:600;font-size:14px;margin-bottom:16px;">② Describe the Issue <span style="color:var(--danger)">*</span></label>
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>Description <span style="color:var(--text-muted);font-size:12px;font-weight:400">— AI will auto-detect priority from keywords</span></label>
+              <textarea id="c-desc" rows="4" placeholder="Describe your issue clearly. E.g. 'The bathroom tap is leaking heavily, water is overflowing' — AI detects Plumbing + High priority."></textarea>
+              <div id="ai-priority-suggestion" class="hidden"></div>
+            </div>
+            <div class="form-group">
+              <label>Room Number</label>
+              <input type="text" id="c-location" placeholder="e.g. 101" />
+            </div>
+            <div class="form-group">
+              <label>Block</label>
+              <select id="c-block">
+                <option value="A">Block A</option>
+                <option value="B">Block B</option>
+                <option value="C">Block C</option>
+                <option value="D">Block D</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Priority <span style="color:var(--text-muted);font-size:12px;font-weight:400">(AI suggested)</span></label>
+              <select id="c-priority">
+                <option value="Low">🟢 Low</option>
+                <option value="Medium">🟡 Medium</option>
+                <option value="High">🔴 High — Emergency</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Upload Image <span style="color:var(--text-muted);font-size:12px;font-weight:400">(optional)</span></label>
+              <div class="file-upload" id="file-upload-area">
+                <input type="file" id="c-image" accept="image/*" />
+                <div class="file-upload-icon">📷</div>
+                <p>Click to upload photo of issue</p>
+                <small>PNG, JPG up to 5MB</small>
+              </div>
+              <div id="image-preview" class="hidden" style="margin-top:8px">
+                <img id="preview-img" style="max-width:100%;max-height:140px;border-radius:8px;border:1px solid var(--border);" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+          <button class="btn btn-blue" id="submit-complaint-btn">📤 Submit Complaint</button>
+          <button class="btn btn-ghost" id="reset-complaint-btn">🔄 Clear Form</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY COMPLAINTS -->
+    <div id="section-my-complaints" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">My Complaints</div></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <select id="filter-status" style="padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text);font-size:13px;outline:none;">
+              <option value="">All Status</option>
+              <option value="Submitted">Submitted</option>
+              <option value="Assigned">Assigned</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+            <select id="filter-category" style="padding:7px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text);font-size:13px;outline:none;">
+              <option value="">All Categories</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Plumbing">Plumbing</option>
+              <option value="Internet">Internet</option>
+              <option value="Furniture">Furniture</option>
+              <option value="Cleanliness">Cleanliness</option>
+              <option value="Other">Other</option>
+            </select>
+            <div class="search-bar" style="flex:1;min-width:160px;">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="complaint-search" placeholder="Search..." />
+            </div>
+          </div>
+        </div>
+        <div id="complaints-list"></div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS (based on actual submitted complaints) -->
+    <div id="section-analytics" class="hidden">
+      <div id="analytics-empty" class="empty-state hidden" style="padding:48px"><span class="empty-icon">📊</span><h3>No Data Yet</h3><p>Submit complaints to see your analytics here.</p></div>
+      <div id="analytics-content">
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+          <div class="stat-card"><div class="stat-icon" style="background:#dbeafe">📋</div><div class="stat-info"><strong id="an-total">0</strong><span>Total Submitted</span></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#d1fae5">✅</div><div class="stat-info"><strong id="an-resolved">0</strong><span>Resolved</span></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">⏳</div><div class="stat-info"><strong id="an-pending">0</strong><span>Still Active</span></div></div>
+          <div class="stat-card"><div class="stat-icon" style="background:#ede9fe">📈</div><div class="stat-info"><strong id="an-rate">0%</strong><span>Resolution Rate</span></div></div>
+        </div>
+        <div class="grid-2">
+          <div class="card"><div class="card-header"><div class="card-title">Complaints by Status</div></div><div class="chart-wrap" style="height:220px"><canvas id="chart-an-status"></canvas></div></div>
+          <div class="card"><div class="card-header"><div class="card-title">Complaints by Category</div></div><div class="chart-wrap" style="height:220px"><canvas id="chart-an-cat"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Priority Breakdown</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+            <div style="text-align:center;padding:20px;background:var(--danger-light);border-radius:10px;">
+              <div style="font-size:2rem;font-weight:800;font-family:var(--font-display);color:var(--danger)" id="an-high">0</div>
+              <div style="font-size:13px;color:var(--danger);font-weight:600">🔴 High Priority</div>
+            </div>
+            <div style="text-align:center;padding:20px;background:var(--warning-light);border-radius:10px;">
+              <div style="font-size:2rem;font-weight:800;font-family:var(--font-display);color:#b45309" id="an-medium">0</div>
+              <div style="font-size:13px;color:#b45309;font-weight:600">🟡 Medium Priority</div>
+            </div>
+            <div style="text-align:center;padding:20px;background:var(--success-light);border-radius:10px;">
+              <div style="font-size:2rem;font-weight:800;font-family:var(--font-display);color:var(--success)" id="an-low">0</div>
+              <div style="font-size:13px;color:var(--success);font-weight:600">🟢 Low Priority</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Category-wise Resolution Rate</div></div>
+          <div id="cat-resolution-table"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="section-profile" class="hidden">
+      <div class="profile-header">
+        <div class="profile-avatar" id="profile-avatar">A</div>
+        <div>
+          <div class="profile-name" id="profile-name">—</div>
+          <div class="profile-role">🎓 Student</div>
+          <div class="profile-detail">
+            <span>📧 <span id="profile-email">—</span></span>
+            <span>🏠 <span id="profile-hostel-type">—</span></span>
+            <span>🔤 Block <span id="profile-block">—</span></span>
+            <span>🚪 Room <span id="profile-room">—</span></span>
+            <span>📅 Joined <span id="profile-joined">—</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">📊 My Stats</div>
+          <div id="profile-stats"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px">📂 By Category</div>
+          <div id="profile-cat-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- RATE MODAL -->
+<div class="modal-overlay" id="rate-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⭐ Rate the Service</div>
+      <button class="modal-close">✕</button>
+    </div>
+    <input type="hidden" id="rate-complaint-id" />
+    <div id="rate-tech-info" style="background:var(--bg);padding:12px;border-radius:8px;margin-bottom:16px;font-size:13px;"></div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:14px;color:var(--text-muted);margin-bottom:14px;">How satisfied are you with the resolution?</div>
+      <div id="star-container" style="display:flex;justify-content:center;gap:10px;">
+        <span class="star" data-val="1" style="font-size:28px;cursor:pointer;color:#d1d5db;transition:color .15s">★</span>
+        <span class="star" data-val="2" style="font-size:28px;cursor:pointer;color:#d1d5db;transition:color .15s">★</span>
+        <span class="star" data-val="3" style="font-size:28px;cursor:pointer;color:#d1d5db;transition:color .15s">★</span>
+        <span class="star" data-val="4" style="font-size:28px;cursor:pointer;color:#d1d5db;transition:color .15s">★</span>
+        <span class="star" data-val="5" style="font-size:28px;cursor:pointer;color:#d1d5db;transition:color .15s">★</span>
+      </div>
+      <div id="star-label" style="margin-top:8px;font-size:13px;color:var(--text-muted);">Click a star to rate</div>
+    </div>
+    <div class="form-group">
+      <label>Feedback (optional)</label>
+      <textarea id="rate-feedback" rows="3" placeholder="Share your experience with the technician..."></textarea>
+    </div>
+    <button class="btn btn-blue w-full" id="submit-rating-btn">Submit Rating</button>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title">Complaint Details</div>
+      <button class="modal-close">✕</button>
+    </div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<!-- CHATBOT -->
+<button class="chatbot-toggle" id="chatbot-toggle" title="HostelBot AI Assistant">
+  <img src = "https://img.icons8.com/?size=96&id=CHBf5jmRzl9y&format=png" alt = "HostelBot" width = "40" height = "40">
+</button>
+<div class="chatbot-window" id="chatbot-window">
+  <div class="chat-header">
+    <div class="chat-header-info">
+      <div class="chat-avatar">🤖</div>
+      <div><div class="chat-name">HostelBot</div><div class="chat-status">● Online — AI Assistant</div></div>
+    </div>
+    <button class="chat-close-btn" id="chat-close">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-quick-replies">
+    <button class="quick-reply">💡 Light issue</button>
+    <button class="quick-reply">🚿 Water leak</button>
+    <button class="quick-reply">📶 No internet</button>
+    <button class="quick-reply">🧹 Dirty room</button>
+  </div>
+  <div class="chat-input-area">
+    <input type="text" class="chat-input" id="chat-input" placeholder="Describe your issue..." />
+    <button class="chat-send-btn" id="chat-send">➤</button>
+  </div>
+</div>
+
+<div id="notif-container" class="notif-container"></div>
+
+<style>
+/* Category selection grid */
+.category-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+@media(max-width:600px){ .category-grid{ grid-template-columns:repeat(2,1fr); } }
+.cat-btn {
+  border:2px solid var(--border); border-radius:12px; padding:16px 12px;
+  text-align:center; cursor:pointer; transition:all 0.2s; background:var(--bg);
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+.cat-btn:hover { border-color:var(--primary); background:var(--primary-light); transform:translateY(-2px); }
+.cat-btn.selected { border-color:var(--primary); background:var(--primary-light); box-shadow:0 0 0 3px rgba(37,99,235,0.15); }
+.cat-icon { font-size:28px; }
+.cat-label { font-weight:700; font-size:13px; }
+.cat-sub { font-size:11px; color:var(--text-muted); }
+/* Complaint card tech info */
+.tech-info-box {
+  background:linear-gradient(135deg,var(--success-light),var(--primary-light));
+  border:1px solid rgba(37,99,235,0.15); border-radius:8px; padding:10px 14px;
+  display:flex; align-items:center; gap:12px; margin-top:10px;
+}
+.tech-info-box .tech-avatar {
+  width:36px;height:36px;border-radius:50%;background:var(--primary);
+  display:grid;place-items:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;
+}
+</style>
+
+<script src="script.js"></script>
+<script>
+let currentUser = null;
+let selectedRating = 0;
+let selectedCategory = '';
+
+document.addEventListener('DOMContentLoaded', async () => {
+  currentUser = Auth.requireAuth('student');
+  if (!currentUser) return;
+
+  // Load complaints from MongoDB
+  await AppCache.loadComplaints();
+
+  document.getElementById('sb-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+  document.getElementById('sb-name').textContent = currentUser.name;
+  const hostelLabel = currentUser.hostelType ? currentUser.hostelType + ' Hostel · ' : '';
+  document.getElementById('sb-room').textContent = `${hostelLabel}Block ${currentUser.block} · Room ${currentUser.room}`;
+  document.getElementById('c-location').value = currentUser.room;
+  document.getElementById('c-block').value = currentUser.block;
+
+  initNav();
+  renderDashboard();
+  setupSubmitForm();
+  setupFilters();
+  setupRating();
+  setupModals();
+
+  const pending = ComplaintManager.getByUser(currentUser.id).filter(c => c.status !== 'Resolved').length;
+  if (pending > 0) {
+    const badge = document.getElementById('pending-count');
+    badge.textContent = pending; badge.style.display = 'inline';
+  }
+
+  // Auto-refresh data every 15 seconds
+  setInterval(async () => {
+    await AppCache.loadComplaints();
+    const sec = document.querySelector('[id^="section-"]:not(.hidden)');
+    if (sec && sec.id === 'section-dashboard')      renderDashboard();
+    if (sec && sec.id === 'section-my-complaints')  renderComplaints();
+    if (sec && sec.id === 'section-analytics')      renderAnalytics();
+  }, 15000);
+});
+
+function initNav() {
+  document.querySelectorAll('[data-section]').forEach(btn => {
+    btn.addEventListener('click', () => switchSection(btn.dataset.section));
+  });
+}
+
+function switchSection(name) {
+  document.querySelectorAll('[id^="section-"]').forEach(s => s.classList.add('hidden'));
+  document.getElementById('section-' + name)?.classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll(`[data-section="${name}"]`).forEach(b => b.classList.add('active'));
+  const titles = { dashboard:'Dashboard', submit:'Submit Complaint', 'my-complaints':'My Complaints', analytics:'Analytics', profile:'Profile' };
+  document.getElementById('page-title').textContent = titles[name] || name;
+  if (name === 'my-complaints') renderComplaints();
+  if (name === 'analytics') renderAnalytics();
+  if (name === 'profile') renderProfile();
+  if (name === 'dashboard') renderDashboard();
+}
+
+function renderDashboard() {
+  const complaints = ComplaintManager.getByUser(currentUser.id);
+  const resolved = complaints.filter(c => c.status === 'Resolved').length;
+  const active = complaints.filter(c => c.status !== 'Resolved').length;
+  const high = complaints.filter(c => c.priority === 'High').length;
+
+  document.getElementById('st-total').textContent = complaints.length;
+  document.getElementById('st-active').textContent = active;
+  document.getElementById('st-resolved').textContent = resolved;
+  document.getElementById('st-high').textContent = high;
+
+  // Recent list (last 3)
+  const recent = [...complaints].sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt)).slice(0,3);
+  const listEl = document.getElementById('recent-list');
+  if (recent.length === 0) {
+    listEl.innerHTML = `<div class="empty-state"><span class="empty-icon">📭</span><h3>No complaints yet</h3><p>Submit your first complaint to get started.</p></div>`;
+  } else {
+    listEl.innerHTML = recent.map(c => compactCardHTML(c)).join('');
+  }
+
+  // Status chart
+  const ctx = document.getElementById('chart-status');
+  const statuses = ['Submitted','Assigned','In Progress','Resolved'];
+  const counts = statuses.map(s => complaints.filter(c=>c.status===s).length);
+  const total = counts.reduce((a,b)=>a+b,0);
+
+  if (total === 0) {
+    document.getElementById('no-complaints-chart')?.classList.remove('hidden');
+    return;
+  }
+  if (ctx) {
+    if (ctx._chart) ctx._chart.destroy();
+    ctx._chart = new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels: statuses, datasets: [{ data: counts, backgroundColor: ['#3b82f6','#f59e0b','#8b5cf6','#10b981'], borderWidth: 0 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ padding:12, font:{size:11} } } } }
+    });
+  }
+}
+
+function compactCardHTML(c) {
+  return `<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;cursor:pointer;" onclick="showDetail('${c.id}')">
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        ${UI.categoryBadge(c.category)}
+        ${UI.priorityBadge(c.priority)}
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:2px;">${c.description.substring(0,70)}${c.description.length>70?'...':''}</div>
+      <div style="font-size:12px;color:var(--text-light);">🏠 Block ${c.block} · ${c.room} · ${UI.timeAgo(c.createdAt)}</div>
+    </div>
+    <div style="flex-shrink:0;">${UI.statusBadge(c.status)}</div>
+  </div>`;
+}
+
+function complaintCardHTML(c) {
+  const catIcons = { Electrical:'⚡', Plumbing:'🚿', Internet:'📶', Furniture:'🪑', Cleanliness:'🧹', Other:'📦' };
+  return `<div class="complaint-card ${(c.priority||'low').toLowerCase()}" data-id="${c.id}">
+    <div class="complaint-card-header">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+          ${UI.categoryBadge(c.category)}
+          ${UI.priorityBadge(c.priority)}
+          ${UI.statusBadge(c.status)}
+        </div>
+        <div class="complaint-card-meta">
+          <span>📅 ${UI.formatDate(c.createdAt)}</span>
+          <span>🏠 Block ${c.block} · Room ${c.room}</span>
+          <span style="color:var(--text-light)">${UI.timeAgo(c.createdAt)}</span>
+        </div>
+      </div>
+    </div>
+    <div class="complaint-card-desc">${c.description}</div>
+    ${c.assignedTechName ? `<div class="tech-info-box">
+      <div class="tech-avatar">🔧</div>
+      <div>
+        <div style="font-weight:600;font-size:13px;">${c.assignedTechName}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${c.assignedTechSpecialty}</div>
+        <div style="font-size:12px;margin-top:2px;">📞 <a href="tel:${c.assignedTechPhone}" style="color:var(--primary);font-weight:600">${c.assignedTechPhone}</a></div>
+      </div>
+    </div>` : ''}
+    <div class="complaint-card-footer" style="margin-top:10px;">
+      <div></div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick="showDetail('${c.id}')">👁 View Details</button>
+        ${c.status === 'Resolved' && !c.rating ? `<button class="btn btn-yellow btn-sm" onclick="openRating('${c.id}')">⭐ Rate</button>` : ''}
+        ${c.rating ? `<span style="color:var(--accent);font-size:13px;align-self:center;">⭐ ${c.rating}/5</span>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderComplaints() {
+  const fStatus = document.getElementById('filter-status').value;
+  const fCat = document.getElementById('filter-category').value;
+  const search = document.getElementById('complaint-search').value.toLowerCase();
+  let complaints = ComplaintManager.getByUser(currentUser.id);
+  if (fStatus) complaints = complaints.filter(c => c.status === fStatus);
+  if (fCat) complaints = complaints.filter(c => c.category === fCat);
+  if (search) complaints = complaints.filter(c => c.description.toLowerCase().includes(search));
+  complaints.sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
+
+  const el = document.getElementById('complaints-list');
+  if (complaints.length === 0) {
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">📭</span><h3>No complaints found</h3><p>Try adjusting filters or submit a new complaint.</p></div>`;
+  } else {
+    el.innerHTML = complaints.map(c => complaintCardHTML(c)).join('');
+  }
+}
+
+function setupFilters() {
+  ['filter-status','filter-category','complaint-search'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', renderComplaints);
+  });
+}
+
+function setupSubmitForm() {
+  // Category buttons
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+      this.classList.add('selected');
+      selectedCategory = this.dataset.cat;
+      document.getElementById('c-category').value = selectedCategory;
+      document.getElementById('cat-error').style.display = 'none';
+    });
+  });
+
+  // AI priority detection
+  let aiDebounce;
+  document.getElementById('c-desc').addEventListener('input', function() {
+    clearTimeout(aiDebounce);
+    aiDebounce = setTimeout(() => {
+      const prio = AI.detectPriority(this.value);
+      const prioEl = document.getElementById('ai-priority-suggestion');
+      if (this.value.trim().length > 10) {
+        prioEl.innerHTML = `<span class="ai-badge">AI</span> Detected priority: <strong>${prio}</strong>${prio==='High'?' 🚨 Emergency keywords found!':''}`;
+        prioEl.className = 'ai-suggestion';
+        document.getElementById('c-priority').value = prio;
+      } else {
+        prioEl.className = 'hidden';
+      }
+    }, 400);
+  });
+
+  // Image upload
+  document.getElementById('file-upload-area').addEventListener('click', () => document.getElementById('c-image').click());
+  document.getElementById('c-image').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = e => {
+      document.getElementById('preview-img').src = e.target.result;
+      document.getElementById('image-preview').classList.remove('hidden');
+    };
+    r.readAsDataURL(file);
+  });
+
+  document.getElementById('submit-complaint-btn').addEventListener('click', submitComplaint);
+  document.getElementById('reset-complaint-btn').addEventListener('click', resetForm);
+}
+
+async function submitComplaint() {
+  const category = document.getElementById('c-category').value;
+  const desc = document.getElementById('c-desc').value.trim();
+  const priority = document.getElementById('c-priority').value;
+  const room = document.getElementById('c-location').value.trim() || currentUser.room;
+  const block = document.getElementById('c-block').value || currentUser.block;
+
+  if (!category) {
+    document.getElementById('cat-error').style.display = 'block';
+    document.getElementById('category-grid').scrollIntoView({ behavior:'smooth' });
+    return;
+  }
+  if (!desc) {
+    Notify.show('Missing Description', 'Please describe your issue.', 'error');
+    document.getElementById('c-desc').focus();
+    return;
+  }
+
+  const imgEl = document.getElementById('preview-img');
+  const image = imgEl.src && !imgEl.src.endsWith(window.location.pathname) ? imgEl.src : null;
+
+  const btn = document.getElementById('submit-complaint-btn');
+  btn.textContent = 'Submitting…'; btn.disabled = true;
+
+  const res = await ComplaintManager.create({ userId:currentUser.id, userName:currentUser.name, description:desc, category, priority, room, block, image });
+
+  btn.textContent = 'Submit Complaint'; btn.disabled = false;
+
+  if (!res.ok) {
+    Notify.show('Error', res.msg || 'Failed to submit complaint.', 'error');
+    return;
+  }
+  Notify.show('Complaint Submitted!', `Your ${category} complaint has been submitted. Warden will assign a specialist.`, 'success');
+  resetForm();
+  switchSection('my-complaints');
+}
+
+function resetForm() {
+  document.getElementById('c-desc').value = '';
+  document.getElementById('c-location').value = currentUser.room;
+  document.getElementById('c-category').value = '';
+  document.getElementById('c-priority').value = 'Low';
+  document.getElementById('ai-priority-suggestion').className = 'hidden';
+  document.getElementById('image-preview').classList.add('hidden');
+  document.getElementById('cat-error').style.display = 'none';
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  selectedCategory = '';
+}
+
+function renderAnalytics() {
+  const complaints = ComplaintManager.getByUser(currentUser.id);
+  if (complaints.length === 0) {
+    document.getElementById('analytics-empty').classList.remove('hidden');
+    document.getElementById('analytics-content').classList.add('hidden');
+    return;
+  }
+  document.getElementById('analytics-empty').classList.add('hidden');
+  document.getElementById('analytics-content').classList.remove('hidden');
+
+  const resolved = complaints.filter(c => c.status === 'Resolved').length;
+  const pending = complaints.length - resolved;
+  const rate = Math.round(resolved / complaints.length * 100);
+
+  document.getElementById('an-total').textContent = complaints.length;
+  document.getElementById('an-resolved').textContent = resolved;
+  document.getElementById('an-pending').textContent = pending;
+  document.getElementById('an-rate').textContent = rate + '%';
+  document.getElementById('an-high').textContent = complaints.filter(c=>c.priority==='High').length;
+  document.getElementById('an-medium').textContent = complaints.filter(c=>c.priority==='Medium').length;
+  document.getElementById('an-low').textContent = complaints.filter(c=>c.priority==='Low').length;
+
+  const makeChart = (id, type, labels, data, colors) => {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    if (ctx._chart) ctx._chart.destroy();
+    ctx._chart = new Chart(ctx, {
+      type,
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth:0, borderRadius: type==='bar'?6:0 }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ padding:10, font:{size:11} } } }, scales: type==='bar'?{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.04)'}},x:{grid:{display:false}}}:{} }
+    });
+  };
+
+  const statuses = ['Submitted','Assigned','In Progress','Resolved'];
+  makeChart('chart-an-status','doughnut',statuses,statuses.map(s=>complaints.filter(c=>c.status===s).length),['#3b82f6','#f59e0b','#8b5cf6','#10b981']);
+
+  const cats = ['Electrical','Plumbing','Internet','Furniture','Cleanliness','Other'];
+  makeChart('chart-an-cat','bar',cats,cats.map(cat=>complaints.filter(c=>c.category===cat).length),['#f59e0b','#3b82f6','#8b5cf6','#ec4899','#10b981','#94a3b8']);
+
+  // Category-wise resolution table
+  const catEl = document.getElementById('cat-resolution-table');
+  const catIcons = { Electrical:'⚡', Plumbing:'🚿', Internet:'📶', Furniture:'🪑', Cleanliness:'🧹', Other:'📦' };
+  const rows = cats.map(cat => {
+    const catComplaints = complaints.filter(c => c.category === cat);
+    if (catComplaints.length === 0) return null;
+    const catResolved = catComplaints.filter(c => c.status === 'Resolved').length;
+    const pct = Math.round(catResolved / catComplaints.length * 100);
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <span style="width:80px;font-size:13px;font-weight:600">${catIcons[cat]} ${cat}</span>
+      <div style="flex:1;background:var(--border);border-radius:50px;height:8px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:var(--success);border-radius:50px;transition:width .5s"></div>
+      </div>
+      <span style="font-size:13px;font-weight:700;width:40px;text-align:right">${pct}%</span>
+      <span style="font-size:12px;color:var(--text-muted);width:70px">${catResolved}/${catComplaints.length}</span>
+    </div>`;
+  }).filter(Boolean).join('');
+  catEl.innerHTML = rows || '<p style="color:var(--text-muted);font-size:14px;">No category data yet.</p>';
+}
+
+function renderProfile() {
+  const complaints = ComplaintManager.getByUser(currentUser.id);
+  document.getElementById('profile-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+  document.getElementById('profile-name').textContent = currentUser.name;
+  document.getElementById('profile-email').textContent = currentUser.email;
+  document.getElementById('profile-block').textContent = currentUser.block;
+  document.getElementById('profile-room').textContent = currentUser.room;
+  document.getElementById('profile-joined').textContent = UI.formatDate(currentUser.createdAt);
+  const htEl = document.getElementById('profile-hostel-type');
+  if (htEl) htEl.textContent = currentUser.hostelType ? currentUser.hostelType + ' Hostel' : '—';
+
+  const resolved = complaints.filter(c=>c.status==='Resolved').length;
+  document.getElementById('profile-stats').innerHTML = [
+    ['Total Complaints', complaints.length, '#dbeafe'],
+    ['Resolved', resolved, '#d1fae5'],
+    ['Active', complaints.length-resolved, '#fef3c7'],
+    ['High Priority', complaints.filter(c=>c.priority==='High').length, '#fee2e2']
+  ].map(([l,v,bg]) => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:${bg};border-radius:8px;margin-bottom:8px;">
+    <span style="font-weight:500;font-size:14px;">${l}</span>
+    <strong style="font-family:var(--font-display);font-size:1.3rem;">${v}</strong>
+  </div>`).join('');
+
+  const cats = ['Electrical','Plumbing','Internet','Furniture','Cleanliness','Other'];
+  const catIcons = { Electrical:'⚡', Plumbing:'🚿', Internet:'📶', Furniture:'🪑', Cleanliness:'🧹', Other:'📦' };
+  document.getElementById('profile-cat-list').innerHTML = cats.map(cat => {
+    const count = complaints.filter(c=>c.category===cat).length;
+    if (!count) return '';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:14px;">${catIcons[cat]} ${cat}</span>
+      <span style="font-weight:700;font-family:var(--font-display);">${count}</span>
+    </div>`;
+  }).join('') || '<p style="color:var(--text-muted);font-size:14px;">No complaints yet.</p>';
+}
+
+function showDetail(id) {
+  const c = ComplaintManager.getById(id);
+  if (!c) return;
+  const statuses = ['Submitted','Assigned','In Progress','Resolved'];
+  const curIdx = statuses.indexOf(c.status);
+  document.getElementById('detail-content').innerHTML = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">${UI.categoryBadge(c.category)}${UI.priorityBadge(c.priority)}${UI.statusBadge(c.status)}</div>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:14px;">${c.description}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;font-size:13px;">
+      <div><strong>Block:</strong> ${c.block}</div>
+      <div><strong>Room:</strong> ${c.room}</div>
+      <div><strong>Submitted:</strong> ${UI.formatDate(c.createdAt)}</div>
+      <div><strong>Updated:</strong> ${UI.timeAgo(c.updatedAt)}</div>
+    </div>
+    ${c.assignedTechName ? `<div class="tech-info-box" style="margin-bottom:14px;">
+      <div class="tech-avatar">🔧</div>
+      <div>
+        <div style="font-weight:700;font-size:14px;">Assigned Technician</div>
+        <div style="font-size:14px;">${c.assignedTechName}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${c.assignedTechSpecialty}</div>
+        <div style="font-size:13px;margin-top:2px;">📞 <a href="tel:${c.assignedTechPhone}" style="color:var(--primary);font-weight:600">${c.assignedTechPhone}</a></div>
+      </div>
+    </div>` : `<div style="background:var(--warning-light);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;">⏳ Awaiting warden to assign a technician.</div>`}
+    ${c.image ? `<img src="${c.image}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:14px;"/>` : ''}
+    <div class="divider"></div>
+    <div style="font-weight:600;margin-bottom:12px;font-size:14px;">📍 Status Timeline</div>
+    <div class="timeline">
+      ${statuses.map((s,i) => {
+        const hist = (c.statusHistory||[]).find(h=>h.status===s);
+        const done = i <= curIdx; const active = i === curIdx;
+        return `<div class="timeline-item">
+          <div class="timeline-dot ${done?(active?'active':'done'):''}">${done?'✓':''}</div>
+          <div class="timeline-content">
+            <div class="timeline-title" style="color:${active?'var(--primary)':'inherit'}">${s}</div>
+            ${hist?`<div class="timeline-date">${UI.formatDate(hist.time)}</div>`:'<div class="timeline-date" style="color:var(--text-light)">Pending</div>'}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${c.rating ? `<div class="divider"></div><div><strong>Your Rating:</strong> <span style="color:var(--accent)">${UI.stars(c.rating)}</span> ${c.feedback?`<p style="color:var(--text-muted);font-size:13px;margin-top:4px;">"${c.feedback}"</p>`:''}</div>` : ''}
+  `;
+  document.getElementById('detail-modal').classList.add('show');
+}
+
+function setupRating() {
+  document.querySelectorAll('.star').forEach(star => {
+    star.addEventListener('mouseenter', function() {
+      const val = parseInt(this.dataset.val);
+      document.querySelectorAll('.star').forEach((s,i) => s.style.color = i < val ? '#f59e0b' : '#d1d5db');
+    });
+    star.addEventListener('mouseleave', () => {
+      document.querySelectorAll('.star').forEach((s,i) => s.style.color = i < selectedRating ? '#f59e0b' : '#d1d5db');
+    });
+    star.addEventListener('click', function() {
+      selectedRating = parseInt(this.dataset.val);
+      document.querySelectorAll('.star').forEach((s,i) => s.style.color = i < selectedRating ? '#f59e0b' : '#d1d5db');
+      const labels = ['','Poor 😞','Fair 😐','Good 👍','Very Good 😊','Excellent 🌟'];
+      document.getElementById('star-label').textContent = labels[selectedRating];
+    });
+  });
+  document.getElementById('submit-rating-btn').addEventListener('click', submitRating);
+}
+
+function openRating(id) {
+  const c = ComplaintManager.getById(id);
+  selectedRating = 0;
+  document.getElementById('rate-complaint-id').value = id;
+  document.getElementById('rate-feedback').value = '';
+  document.querySelectorAll('.star').forEach(s => s.style.color = '#d1d5db');
+  document.getElementById('star-label').textContent = 'Click a star to rate';
+  document.getElementById('rate-tech-info').innerHTML = c.assignedTechName
+    ? `<strong>🔧 ${c.assignedTechName}</strong> — ${c.assignedTechSpecialty}<br><span style="color:var(--text-muted);font-size:12px">Resolved: ${UI.formatDate(c.resolvedAt)}</span>`
+    : `Complaint: ${c.category}`;
+  document.getElementById('rate-modal').classList.add('show');
+}
+
+async function submitRating() {
+  if (!selectedRating) { Notify.show('Select Rating', 'Please click a star to rate.', 'warning'); return; }
+  const id = document.getElementById('rate-complaint-id').value;
+  const feedback = document.getElementById('rate-feedback').value.trim();
+  const res = await ComplaintManager.rate(id, selectedRating, feedback);
+  if (!res.ok) { Notify.show('Error', res.msg || 'Failed to submit rating.', 'error'); return; }
+  Notify.show('Thank you!', 'Your rating has been submitted.', 'success');
+  document.getElementById('rate-modal').classList.remove('show');
+  renderComplaints();
+}
+
+function setupModals() {
+  document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => btn.closest('.modal-overlay').classList.remove('show')));
+  document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target===m) m.classList.remove('show'); }));
+}
+
+window.showDetail = showDetail;
+window.openRating = openRating;
+</script>
+</body>
+</html>
