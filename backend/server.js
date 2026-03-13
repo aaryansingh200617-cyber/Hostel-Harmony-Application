@@ -23,7 +23,9 @@ app.use('/api/complaints', complaintRoutes);
 app.get('/api/health', (_req, res) =>
   res.json({ ok: true, msg: 'HostelCare API is running ✅' })
 );
-
+app.get('/', (_req, res) =>
+  res.json({ ok: true, msg: 'HostelCare API is running ✅ Visit /api/health for status.' })
+);
 // ── Start ───────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🚀 HostelCare API running at http://localhost:${PORT}`);
