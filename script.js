@@ -1,8 +1,7 @@
 // ═══════════════════════════════════════════════════════
 //  HostelCare — Core Application Logic (MongoDB Edition)
 // ═══════════════════════════════════════════════════════
-
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'https://hostel-harmony-application.onrender.com/api';
 
 // ── API Helper ─────────────────────────────────────────────
 const API = {
