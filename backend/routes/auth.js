@@ -156,7 +156,7 @@ router.post('/forgot-password', async (req, res) => {
     // Send email
     const transporter = createTransporter();
     await transporter.sendMail({
-      from:    `"HostelCare" <${process.env.EMAIL_USER}>`,
+      from: `"HostelCare" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
       to:      normalEmail,
       subject: 'HostelCare — Password Reset Request',
       html: `
